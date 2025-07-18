@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% block title %}ใบเสร็จ โต๊ะ {{ bill.table_number }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header text-center bg-dark text-white">
+                <h3>ใบเสร็จรับเงิน / Bill</h3>
+                <h4>ร้าน SUKI-SYS</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between mb-3">
+                    <span><strong>โต๊ะหมายเลข:</strong></span>
+                    <span class="fs-5 fw-bold">{{ bill.table_number }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span><strong>วันที่:</strong></span>
+                    <span>{{ bill.start_time.strftime('%Y-%m-%d') }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span>ผู้ใหญ่ ({{ bill.adults }} x {{ "%.0f"|format(ADULT_PRICE) }} บ.)</span>
+                    <span>{{ "%.2f"|format(bill.adults * ADULT_PRICE) }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>เด็ก ({{ bill.children }} x {{ "%.0f"|format(CHILD_PRICE) }} บ.)</span>
+                    <span>{{ "%.2f"|format(bill.children * CHILD_PRICE) }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fs-4 fw-bold text-success">
+                    <span>ยอดรวมสุทธิ:</span>
+                    <span>{{ "%.2f"|format(bill.total_price) }} บาท</span>
+                </div>
+                <hr>
+
+                <!-- ================================================== -->
+                <!-- ===== ส่วนของ QR Code และปุ่มสำหรับเทสระบบ ===== -->
+                <!-- ================================================== -->
+                <div class="text-center my-4">
+                    <h5>สแกน QR Code นี้เพื่อเปิดเมนูอาหาร</h5>
+                    
+                    <img src="{{ url_for('static', filename=bill.qr_code_path) }}" 
+                         alt="QR Code for menu" 
+                         class="img-fluid my-2 border rounded" 
+                         style="max-width: 200px;">
+                    
+                    <br>
+                    
+                    <!-- VVVVVV ปุ่มที่ต้องการอยู่ตรงนี้ VVVVVV -->
+                    <a href="{{ url_for('menu_view', table_number=bill.table_number) }}" class="btn btn-info mt-2">
+                        ไปที่หน้าเมนู (สำหรับเทส)
+                    </a>
+                    <!-- ^^^^^^ ปุ่มที่ต้องการอยู่ตรงนี้ ^^^^^^ -->
+
+                </div>
+                <!-- ================================================== -->
+
+                <hr>
+                <div class="text-muted small">
+                    <p class="mb-1"><strong>เวลาเริ่ม:</strong> {{ bill.start_time.strftime('%H:%M:%S') }}</p>
+                    <p class="mb-0"><strong>เวลาสิ้นสุด:</strong> {{ bill.end_time.strftime('%H:%M:%S') }}</p>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('cashier_view') }}" class="btn btn-secondary">กลับไปหน้าแคชเชียร์</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

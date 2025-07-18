@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<h1 class="mb-4">📊 Dashboard ภาพรวม</h1>
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">ยอดขายทั้งหมด</h5>
+                <p class="card-text fs-4">{{ data.total_revenue }} บาท</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">จำนวนลูกค้าทั้งหมด</h5>
+                <p class="card-text fs-4">{{ data.total_customers }} คน</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card text-dark bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">จำนวนออเดอร์ทั้งหมด</h5>
+                <p class="card-text fs-4">{{ data.total_orders }} รายการ</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">โต๊ะที่ใช้งานอยู่</h5>
+                <p class="card-text fs-4">{{ data.active_tables_count }} โต๊ะ</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

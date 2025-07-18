@@ -1,0 +1,126 @@
+{% extends "layout.html" %}
+{% block title %}หน้าแคชเชียร์{% endblock %}
+
+{% block content %}
+<meta http-equiv="refresh" content="30">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">หน้าแคชเชียร์ 🛎️</h1>
+</div>
+
+<!-- Form for creating a new bill -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        เปิดโต๊ะใหม่
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('cashier_view') }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md">
+                    <label for="table_number" class="form-label">หมายเลขโต๊ะ</label>
+                    <select class="form-select" id="table_number" name="table_number" required {% if not available_tables %}disabled{% endif %}>
+                        {% if available_tables %}
+                            <option value="" selected disabled>-- เลือกโต๊ะที่ว่าง --</option>
+                            {% for table in available_tables %}
+                                <option value="{{ table }}">{{ table }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option selected disabled>ไม่มีโต๊ะว่าง</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md">
+                    <label for="adults" class="form-label">จำนวนผู้ใหญ่</label>
+                    <input type="number" class="form-control" id="adults" name="adults" value="1" min="0" required>
+                </div>
+                <div class="col-sm-6 col-md">
+                    <label for="children" class="form-label">จำนวนเด็ก</label>
+                    <input type="number" class="form-control" id="children" name="children" value="0" min="0" required>
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary w-100" {% if not available_tables %}disabled{% endif %}>สร้างบิล</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- List of current tables -->
+<h2 class="h4 mt-4">โต๊ะที่กำลังใช้งาน</h2>
+<div class="list-group">
+    {% for table in tables %}
+        {% set is_expired = table.status == 'expired' %}
+        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if is_expired %}list-group-item-warning{% else %}list-group-item-success{% endif %}">
+            <div>
+                <h5 class="mb-1 fw-bold">โต๊ะ {{ table.table_number }}</h5>
+                <p class="mb-1">ผู้ใหญ่: {{ table.adults }} คน, เด็ก: {{ table.children }} คน | รวม: {{ "%.2f"|format(table.total_price) }} บาท</p>
+                <small>หมดเวลา: {{ table.end_time.strftime('%H:%M:%S') }}</small>
+            </div>
+            <div class="ms-3">
+                <form action="{{ url_for('checkout', table_number=table.table_number) }}" method="POST" onsubmit="return confirm('ยืนยัน Check Out โต๊ะ {{ table.table_number }}?');">
+                    <button type="submit" class="btn btn-sm {% if is_expired %}btn-danger{% else %}btn-outline-danger{% endif %}">Check Out</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="list-group-item text-center p-4">
+            ยังไม่มีโต๊ะที่เปิดใช้งาน
+        </div>
+    {% endfor %}
+</div>
+
+<!-- MODAL POPUP FOR NEW BILL -->
+{% if new_bill_info %}
+<div class="modal fade" id="billModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">ใบเสร็จ - โต๊ะ {{ new_bill_info.table_number }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <p>ผู้ใหญ่: {{ new_bill_info.adults }} คน | เด็ก: {{ new_bill_info.children }} คน</p>
+        <h3 class="my-3">ยอดรวม: <strong>{{ "%.2f"|format(new_bill_info.total_price) }}</strong> บาท</h3>
+        <p class="text-muted"><small>เวลา: {{ new_bill_info.start_time.strftime('%H:%M') }} - {{ new_bill_info.end_time.strftime('%H:%M') }}</small></p>
+        <hr>
+        <p class="mt-3">สแกน QR Code เพื่อสั่งอาหาร</p>
+        
+        <!-- FIX: Replaced backslashes in the path with forward slashes to ensure the URL is always correct. -->
+        <img src="{{ url_for('static', filename=(new_bill_info.qr_code_path | replace('\\', '/'))) }}" alt="QR Code" class="img-fluid my-2 border rounded" style="max-width: 180px;">
+        
+        <br>
+        <a href="{{ url_for('menu_view', table_number=new_bill_info.table_number) }}" class="btn btn-sm btn-secondary mt-2" target="_blank">เปิดเมนู (สำหรับเทส)</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // This function waits for the 'bootstrap' object to be defined before executing.
+    // This prevents the "bootstrap is not defined" ReferenceError.
+    function showModalWhenReady() {
+        if (typeof bootstrap !== 'undefined') {
+            // Bootstrap is loaded, we can now safely create a modal.
+            var modalElement = document.getElementById('billModal');
+            if (modalElement) {
+                var billModal = new bootstrap.Modal(modalElement);
+                billModal.show();
+            }
+        } else {
+            // Bootstrap is not loaded yet, wait 100ms and try again.
+            setTimeout(showModalWhenReady, 100);
+        }
+    }
+
+    // Start the process after the main HTML document has been loaded.
+    document.addEventListener('DOMContentLoaded', function () {
+        // Only attempt to show the modal if its HTML exists on the page.
+        if (document.getElementById('billModal')) {
+            showModalWhenReady();
+        }
+    });
+</script>
+{% endblock %}

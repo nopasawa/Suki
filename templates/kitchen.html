@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block title %}ห้องครัว{% endblock %}
+
+{% block content %}
+<meta http-equiv="refresh" content="15">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 mb-0">รายการอาหารที่ต้องเตรียม 👨‍🍳</h1>
+</div>
+
+{% if orders_by_table %}
+    <div class="row">
+    {% for table_num, orders in orders_by_table.items() %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white text-center">
+                    <h5 class="mb-0">โต๊ะ {{ table_num }}</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {# FIX: Changed from orders.itertuples() to just 'orders' because the data is now a standard list of dictionaries. #}
+                    {% for order in orders %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ order.item_name }}</strong>
+                            <br>
+                            <small class="text-muted">จำนวน: {{ order.quantity }}</small>
+                        </div>
+                        <form action="{{ url_for('serve_order', order_id=order.order_id) }}" method="POST">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">เสิร์ฟแล้ว</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center p-5 bg-light rounded">
+        <h4>ยอดเยี่ยม!</h4>
+        <p class="text-muted">ยังไม่มีรายการสั่งอาหารเข้ามาในขณะนี้</p>
+    </div>
+{% endif %}
+{% endblock %}
